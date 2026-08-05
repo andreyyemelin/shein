@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHEIN Tracker - מעקב משלוחים אישי</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons for premium look -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Rubik -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Rubik', sans-serif;
+            background-color: #f8fafc;
+        }
+        .tab-active {
+            border-bottom: 3px solid #000000;
+            color: #000000;
+            font-weight: 700;
+        }
+        /* Custom scrollbar for premium feel */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between text-slate-800">
+
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="fixed inset-0 bg-slate-900 bg-opacity-60 backdrop-blur-md flex items-center justify-center z-50 p-4 transition-all duration-500">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 border border-slate-100 transform scale-100 transition-transform duration-300">
+            <div class="text-center mb-6">
+                <!-- Premium SHEIN style logo -->
+                <h1 class="text-4xl font-black tracking-widest text-black mb-2">S H E I N</h1>
+                <p class="text-xs uppercase tracking-widest text-slate-400 font-bold">VIP Delivery Tracking System</p>
+                <div class="w-12 h-1 bg-black mx-auto mt-4 rounded-full"></div>
+            </div>
+            
+            <div class="space-y-6">
+                <div>
+                    <label for="tzInput" class="block text-sm font-medium text-slate-600 mb-2">אנא הקלד תעודת זהות לכניסה:</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                            <i class="fa-solid fa-id-card"></i>
+                        </span>
+                        <input type="text" id="tzInput" onkeydown="if(event.key === 'Enter') handleLogin()" placeholder="הקלד ת.ז. בת 9 ספרות" 
+                               class="w-full pl-4 pr-10 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition text-center tracking-widest font-bold text-lg" />
+                    </div>
+                </div>
+                
+                <button onclick="handleLogin()" class="w-full bg-black hover:bg-slate-800 text-white font-bold py-3.5 px-4 rounded-xl transition duration-200 flex items-center justify-center gap-2 shadow-lg shadow-slate-900/10">
+                    <span>התחבר למערכת</span>
+                    <i class="fa-solid fa-arrow-left"></i>
+                </button>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <span class="text-xs text-slate-400">מערכת מאובטחת למעקב משלוחים אישיים בלבד</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div class="flex-grow flex flex-col">
+        
+        <!-- HEADER -->
+        <header class="bg-white border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+            <div class="max-w-6xl mx-auto px-4 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-black text-white p-2 rounded-xl font-black tracking-tighter text-xl">SH</div>
+                    <div>
+                        <h1 class="font-black text-xl tracking-wide text-slate-900">SHEIN Tracker</h1>
+                        <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">מערכת מעקב משלוחים אקסקלוסיבית</p>
+                    </div>
+                </div>
+                
+                <!-- Search bar in Header -->
+                <div class="relative w-full sm:w-80">
+                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-sm"></i>
+                    </span>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="חפש לפי הזמנה, מעקב או החזר..." 
+                           class="w-full pl-4 pr-9 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition" />
+                    <button id="clearSearchBtn" onclick="clearSearch()" class="hidden absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 hover:text-black">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <span id="userBadge" class="bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="tzLabel">ת.ז. לא מזוהה</span>
+                    </span>
+                    <button onclick="logout()" class="text-slate-400 hover:text-red-500 text-sm transition p-1" title="התנתק מהמערכת">
+                        <i class="fa-solid fa-right-from-bracket text-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- STATS BAR / ALERT FOR UNMATCHED TZ -->
+        <div id="unmatchedAlert" class="hidden bg-rose-50 border-b border-rose-200 py-3.5 px-4">
+            <div class="max-w-6xl mx-auto flex items-center gap-3 text-rose-800 text-sm font-semibold">
+                <i class="fa-solid fa-circle-exclamation text-rose-500 text-lg"></i>
+                <span id="unmatchedAlertText">לא נמצא משתמש על תעודת זהות זה, לבקשת פתיחת משתמש יש לכתוב למייל הבא: sheinapp@yemelin.org</span>
+            </div>
+        </div>
+
+        <!-- MAIN CONTAINER -->
+        <main class="max-w-6xl mx-auto px-4 py-6 flex-grow w-full">
+            
+            <!-- SEARCH RESULT HEADER BANNER -->
+            <div id="searchResultsBanner" class="hidden mb-6 bg-slate-100 border border-slate-200 rounded-xl p-4 flex justify-between items-center">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-filter text-slate-500"></i>
+                    <span class="text-sm font-medium text-slate-700">תוצאות חיפוש עבור: <strong id="searchQueryText" class="text-black"></strong></span>
+                    <span id="searchCountBadge" class="bg-black text-white text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <button onclick="clearSearch()" class="text-xs text-red-600 hover:underline font-bold">ביטול סינון חיפוש</button>
+            </div>
+
+            <!-- TABS NAVIGATION -->
+            <div class="border-b border-slate-200 mb-6 overflow-x-auto">
+                <nav class="flex space-x-reverse space-x-8 text-sm font-medium whitespace-nowrap min-w-max" aria-label="Tabs">
+                    <button onclick="switchTab('ordered')" id="tab-ordered" class="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-receipt text-slate-400"></i>
+                        <span>הוזמן</span>
+                        <span id="badge-ordered" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="switchTab('shipped')" id="tab-shipped" class="tab-active py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-plane-departure text-slate-400"></i>
+                        <span>נשלח</span>
+                        <span id="badge-shipped" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="switchTab('received')" id="tab-received" class="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-box-open text-slate-400"></i>
+                        <span>התקבל בישראל</span>
+                        <span id="badge-received" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="switchTab('pickup')" id="tab-pickup" class="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-house-chimney-user text-slate-400"></i>
+                        <span>ממתינה לאיסוף</span>
+                        <span id="badge-pickup" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="switchTab('closed')" id="tab-closed" class="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-circle-check text-slate-400"></i>
+                        <span>חבילה נסגרה</span>
+                        <span id="badge-closed" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+
+                    <button onclick="switchTab('returned')" id="tab-returned" class="py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150">
+                        <i class="fa-solid fa-rotate-left text-slate-400"></i>
+                        <span>הוחזר</span>
+                        <span id="badge-returned" class="bg-slate-200 text-slate-700 text-xs font-bold px-2 py-0.5 rounded-full">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- CARDS GRID CONTAINER -->
+            <div id="noDataContainer" class="hidden py-16 text-center">
+                <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-box text-slate-300 text-3xl"></i>
+                </div>
+                <h3 class="text-lg font-bold text-slate-700 mb-1">אין חבילות להצגה</h3>
+                <p class="text-sm text-slate-400">לא נמצאו חבילות בקטגוריה זו עבור תעודת הזהות שהוזנה.</p>
+            </div>
+
+            <div id="cardsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Cards will be dynamically injected here -->
+            </div>
+
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-100 py-6 text-center text-xs text-slate-400 mt-12">
+        <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <p>© 2026 SHEIN Track VIP. כל הזכויות שמורות.</p>
+            <div class="flex gap-4">
+                <a href="#" class="hover:text-black transition">תנאי שימוש</a>
+                <span>•</span>
+                <a href="#" class="hover:text-black transition">מדיניות פרטיות</a>
+                <span>•</span>
+                <a href="#" class="hover:text-black transition">תמיכה טכנית</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JS LOGIC AND DATA -->
+    <script>
+        // Authorized TZs
+        const PRIMARY_TZ = "336281092";
+        const LIMITED_TZ = "336281084";
+
+        // Current UI States
+        let currentTab = "shipped"; 
+        let userTz = "";
+        let searchQuery = "";
+
+        // Core dataset - Updated with latest package statuses and new orders
+        const packagesDatabase = [
+            {
+                id: "pkg-1",
+                sheinOrderNum: "GSH18322M0010VW",
+                estimatedDelivery: "15 ביולי - 24 ביולי, 2026",
+                summary: "", 
+                amount: 62.03,
+                localTrackingNum: "SN7681305 דרך חברת GCX",
+                status: "returned", 
+                returnTrackingNum: "26665793220033631689",
+                returnUrl: "http://hfd.sh/WZ8wyZ",
+                uploadImageUrl: "https://partners.hfd.co.il/approve/26665793220033631689",
+                distributionImage: "",
+                returnDetails: {
+                    store: "מכולת אקספרס",
+                    hours: "ראשון עד חמישי 09:00-19:30, שישי וערבי חג 09:00-13:00",
+                    supportUrl: "https://wa.me/97250"
+                }
+            },
+            {
+                id: "pkg-2",
+                sheinOrderNum: "GSH18322200NMPH",
+                estimatedDelivery: "15 ביולי - 21 ביולי, 2026",
+                summary: "", 
+                amount: 311.26,
+                localTrackingNum: "SN7684925 דרך GCX",
+                status: "returned",
+                returnTrackingNum: "92509894", 
+                returnUrl: "http://hfd.sh/r9LBY7", 
+                uploadImageUrl: "https://partners.hfd.co.il/approve/67175992509894590587", 
+                distributionImage: "",
+                returnDetails: {
+                    store: "מכולת אקספרס",
+                    hours: "ראשון עד חמישי 09:00-19:30, שישי וערבי חג 09:00-13:00",
+                    supportUrl: "https://wa.me/97250"
+                }
+            },
+            {
+                id: "pkg-3",
+                sheinOrderNum: "GSH18Y22A000XG7",
+                estimatedDelivery: "23 ביולי - 29 ביולי, 2026",
+                summary: "מכנס קצר שחור, 2 מכנסי סריג (Lו XL), שתי סטים קצרים (Lו XL)", 
+                amount: 266.40,
+                localTrackingNum: "SN7785965", 
+                status: "closed", // Collected from store!
+                returnTrackingNum: "",
+                returnUrl: "",
+                distributionImage: ""
+            },
+            {
+                id: "pkg-4",
+                sheinOrderNum: "GSH18J22900N59L",
+                estimatedDelivery: "04 באוגוסט - 10 באוגוסט, 2026",
+                summary: "מכנס ארוך (L ו-XL) ומכנס קצר (שתי מידות L ו-XL)", 
+                amount: 137.68,
+                localTrackingNum: "SN7943366 דרך חברת GCX", 
+                status: "received", // Updated: Arrived in Israel!
+                returnTrackingNum: "",
+                returnUrl: "",
+                distributionImage: ""
+            },
+            {
+                id: "pkg-5",
+                sheinOrderNum: "GSH18D22U00MXBR",
+                estimatedDelivery: "06 באוגוסט - 12 באוגוסט, 2026",
+                summary: "2 סוודרים (L ו-XL), גופייה, 2 סוודרים צבע משמש (L ו-XL), ג'ינס לבן (L ו-XL)", 
+                amount: 335.89,
+                localTrackingNum: "SN7959416", 
+                status: "shipped", 
+                returnTrackingNum: "",
+                returnUrl: "",
+                distributionImage: "",
+                images: [
+                    "28072026-01.png",
+                    "28072026-02.png",
+                    "28072026-03.png",
+                    "28072026-04.png"
+                ]
+            },
+            {
+                id: "pkg-6",
+                sheinOrderNum: "GSH18P22X001PQX",
+                estimatedDelivery: "10 באוגוסט - 16 באוגוסט, 2026",
+                summary: "מכנס קצר (L ו-XL) וסיכה מעוצבת קטנה", 
+                amount: 56.07,
+                localTrackingNum: "", 
+                status: "ordered",
+                returnTrackingNum: "",
+                returnUrl: "",
+                distributionImage: "",
+                images: [
+                    "30072026-001.png",
+                    "30072026-002.png"
+                ]
+            },
+            {
+                id: "pkg-7",
+                sheinOrderNum: "GSH1RM22A001AK5",
+                estimatedDelivery: "10 באוגוסט - 16 באוגוסט, 2026",
+                summary: "", 
+                amount: 44.24,
+                localTrackingNum: "", 
+                status: "ordered",
+                returnTrackingNum: "",
+                returnUrl: "",
+                distributionImage: "",
+                images: [
+                    "01082026-001.png",
+                    "01082026-002.png",
+                    "01082026-003.png"
+                ]
+            }
+        ];
+
+        // On Load Check
+        window.onload = function() {
+            localStorage.removeItem("shein_user_tz");
+            userTz = "";
+            document.getElementById("tzInput").value = "";
+        }
+
+        // Login Logic
+        function handleLogin() {
+            const inputTz = document.getElementById("tzInput").value.trim();
+            if (!inputTz) {
+                alertBox("נא להזין תעודת זהות תקינה");
+                return;
+            }
+            userTz = inputTz;
+            localStorage.setItem("shein_user_tz", userTz);
+            processLogin(userTz);
+        }
+
+        // Process successful or unmatched login
+        function processLogin(tz) {
+            const loginScreen = document.getElementById("loginScreen");
+            const unmatchedAlert = document.getElementById("unmatchedAlert");
+            const tzLabel = document.getElementById("tzLabel");
+
+            loginScreen.classList.add("opacity-0", "pointer-events-none");
+            
+            if (tz === PRIMARY_TZ) {
+                unmatchedAlert.classList.add("hidden");
+                tzLabel.textContent = "אנדריי יאמלין";
+                tzLabel.parentElement.className = "bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-200";
+            } else if (tz === LIMITED_TZ) {
+                unmatchedAlert.classList.add("hidden");
+                tzLabel.textContent = "משתמש מורשה (החזרים)";
+                tzLabel.parentElement.className = "bg-emerald-50 text-emerald-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-emerald-200";
+                switchTab("returned");
+            } else {
+                unmatchedAlert.classList.remove("hidden");
+                
+                const customMessage = 'לא נמצא משתמש על תעודת זהות זה, לבקשת פתיחת משתמש יש לכתוב למייל הבא: <a href="mailto:sheinapp@yemelin.org" class="underline font-bold text-rose-700 hover:text-rose-900">sheinapp@yemelin.org</a>.';
+                
+                document.getElementById("unmatchedAlertText").innerHTML = customMessage;
+                tzLabel.textContent = `משתמש לא רשום`;
+                tzLabel.parentElement.className = "bg-rose-50 text-rose-700 text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-rose-200";
+                
+                alertBox(customMessage);
+            }
+
+            updateBadges();
+            renderPackages();
+        }
+
+        function logout() {
+            localStorage.removeItem("shein_user_tz");
+            userTz = "";
+            document.getElementById("tzInput").value = "";
+            const loginScreen = document.getElementById("loginScreen");
+            loginScreen.classList.remove("opacity-0", "pointer-events-none");
+        }
+
+        // Switch active tab view
+        function switchTab(tabName) {
+            currentTab = tabName;
+            
+            const tabs = ['ordered', 'shipped', 'received', 'pickup', 'closed', 'returned'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-${t}`);
+                if (t === tabName) {
+                    btn.className = "py-4 px-1 border-b-2 tab-active text-black font-bold text-sm flex items-center gap-2 transition duration-150";
+                } else {
+                    btn.className = "py-4 px-1 border-b-2 border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium text-sm flex items-center gap-2 transition duration-150";
+                }
+            });
+
+            renderPackages();
+        }
+
+        // Search Bar Handler
+        function handleSearch() {
+            const val = document.getElementById("searchInput").value.trim().toLowerCase();
+            const clearBtn = document.getElementById("clearSearchBtn");
+            
+            searchQuery = val;
+            
+            if (val.length > 0) {
+                clearBtn.classList.remove("hidden");
+                document.getElementById("searchResultsBanner").classList.remove("hidden");
+                document.getElementById("searchQueryText").textContent = `"${val}"`;
+            } else {
+                clearBtn.classList.add("hidden");
+                document.getElementById("searchResultsBanner").classList.add("hidden");
+            }
+            renderPackages();
+        }
+
+        function clearSearch() {
+            document.getElementById("searchInput").value = "";
+            searchQuery = "";
+            document.getElementById("clearSearchBtn").classList.add("hidden");
+            document.getElementById("searchResultsBanner").classList.add("hidden");
+            renderPackages();
+        }
+
+        function getPackagesForUser() {
+            if (userTz === PRIMARY_TZ) {
+                return packagesDatabase;
+            } else if (userTz === LIMITED_TZ) {
+                return packagesDatabase.filter(p => p.status === "returned");
+            }
+            return [];
+        }
+
+        function updateBadges() {
+            const list = getPackagesForUser();
+            
+            const counts = {
+                ordered: 0,
+                shipped: 0,
+                received: 0,
+                pickup: 0,
+                closed: 0,
+                returned: 0
+            };
+
+            list.forEach(p => {
+                if (counts[p.status] !== undefined) {
+                    counts[p.status]++;
+                }
+            });
+
+            document.getElementById("badge-ordered").textContent = counts.ordered;
+            document.getElementById("badge-shipped").textContent = counts.shipped;
+            document.getElementById("badge-received").textContent = counts.received;
+            document.getElementById("badge-pickup").textContent = counts.pickup;
+            document.getElementById("badge-closed").textContent = counts.closed;
+            document.getElementById("badge-returned").textContent = counts.returned;
+        }
+
+        function renderPackages() {
+            const grid = document.getElementById("cardsGrid");
+            const noData = document.getElementById("noDataContainer");
+            grid.innerHTML = "";
+
+            let list = getPackagesForUser();
+
+            if (searchQuery) {
+                list = list.filter(p => {
+                    const matchShein = p.sheinOrderNum.toLowerCase().includes(searchQuery);
+                    const matchLocal = (p.localTrackingNum || "").toLowerCase().includes(searchQuery);
+                    const matchReturn = (p.returnTrackingNum || "").toLowerCase().includes(searchQuery);
+                    const matchSummary = (p.summary || "").toLowerCase().includes(searchQuery);
+                    
+                    return matchShein || matchLocal || matchReturn || matchSummary;
+                });
+                document.getElementById("searchCountBadge").textContent = list.length;
+            } else {
+                list = list.filter(p => p.status === currentTab);
+            }
+
+            if (list.length === 0) {
+                noData.classList.remove("hidden");
+                grid.classList.add("hidden");
+            } else {
+                noData.classList.add("hidden");
+                grid.classList.remove("hidden");
+
+                list.forEach(item => {
+                    grid.appendChild(createCard(item));
+                });
+            }
+        }
+
+        function createCard(item) {
+            const card = document.createElement("div");
+            card.className = "bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col justify-between";
+
+            let statusConfig = {
+                badge: "bg-amber-100 text-amber-800",
+                label: "הוזמן מחו\"ל",
+                icon: "fa-receipt"
+            };
+
+            if (item.status === "shipped") {
+                statusConfig = {
+                    badge: "bg-blue-100 text-blue-800",
+                    label: "בדרך לישראל",
+                    icon: "fa-plane"
+                };
+            } else if (item.status === "received") {
+                statusConfig = {
+                    badge: "bg-indigo-100 text-indigo-800",
+                    label: "התקבל בישראל",
+                    icon: "fa-location-dot"
+                };
+            } else if (item.status === "pickup") {
+                statusConfig = {
+                    badge: "bg-orange-100 text-orange-800 animate-pulse",
+                    label: "ממתינה לאיסוף",
+                    icon: "fa-house-chimney-user"
+                };
+            } else if (item.status === "closed") {
+                statusConfig = {
+                    badge: "bg-emerald-100 text-emerald-800",
+                    label: "חבילה נסגרה",
+                    icon: "fa-circle-check"
+                };
+            } else if (item.status === "returned") {
+                statusConfig = {
+                    badge: "bg-rose-100 text-rose-800",
+                    label: "הוחזרה לספק",
+                    icon: "fa-rotate-left"
+                };
+            }
+
+            let cardBodyHtml = `
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-[10px] uppercase font-bold tracking-widest text-slate-400">מספר הזמנה SHEIN</span>
+                            <h4 class="font-extrabold text-lg text-slate-900 tracking-wide">${item.sheinOrderNum}</h4>
+                        </div>
+                        <span class="text-xs px-2.5 py-1 rounded-full font-bold ${statusConfig.badge} flex items-center gap-1">
+                            <i class="fa-solid ${statusConfig.icon}"></i>
+                            ${statusConfig.label}
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 bg-slate-50 rounded-xl p-3 mb-4">
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-semibold">סכום קנייה</span>
+                            <span class="font-black text-slate-800 text-base">₪${item.amount.toFixed(2)}</span>
+                        </div>
+                        <div>
+                            <span class="block text-[10px] text-slate-400 font-semibold">תאריך הגעה משוער</span>
+                            <span class="font-bold text-slate-700 text-xs">${item.estimatedDelivery}</span>
+                        </div>
+                    </div>
+            `;
+
+            if (item.summary) {
+                cardBodyHtml += `
+                    <div class="mb-4">
+                        <span class="block text-[10px] text-slate-400 font-semibold mb-1">פירוט תכולת החבילה</span>
+                        <p class="text-xs text-slate-600 bg-slate-50/50 p-2.5 rounded-lg border border-slate-100 leading-relaxed">${item.summary}</p>
+                    </div>
+                `;
+            }
+
+            if (item.images && item.images.length > 0) {
+                cardBodyHtml += `
+                    <div class="mb-4">
+                        <button onclick="openGalleryModal(['${item.images.join("','")}'])" class="flex items-center justify-center gap-2 w-full text-center bg-slate-900 hover:bg-black text-white py-2.5 px-4 rounded-xl text-xs font-bold transition shadow-sm">
+                            <i class="fa-solid fa-images text-amber-400"></i>
+                            <span>צפייה בתמונות הפריטים (${item.images.length})</span>
+                        </button>
+                    </div>
+                `;
+            }
+
+            cardBodyHtml += `
+                    <div class="space-y-2 mt-4 pt-4 border-t border-slate-100">
+            `;
+
+            // Display Pickup details card with Pickup Code
+            if (item.status === "pickup" && item.pickupDetails) {
+                cardBodyHtml += `
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3 my-3">
+                        <div class="bg-black text-white p-3 rounded-xl flex justify-between items-center shadow-md">
+                            <div>
+                                <span class="block text-[10px] text-amber-400 uppercase font-bold">קוד איסוףבחנות</span>
+                                <span class="font-black text-xl tracking-widest">${item.pickupDetails.code}</span>
+                            </div>
+                            <button onclick="copyToClipboard('${item.pickupDetails.code}')" class="text-xs bg-white/20 hover:bg-white/30 text-white px-3 py-1.5 rounded-lg font-bold transition">
+                                העתק קוד
+                            </button>
+                        </div>
+
+                        <div class="flex items-start gap-2.5">
+                            <i class="fa-solid fa-map-pin text-amber-600 mt-1 text-sm"></i>
+                            <div>
+                                <span class="block text-[10px] text-amber-700 font-bold">נקודת איסוף</span>
+                                <span class="text-xs text-slate-800 font-bold leading-relaxed">${item.pickupDetails.location}</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-2.5 border-t border-amber-100 pt-2.5">
+                            <i class="fa-solid fa-clock text-amber-600 mt-1 text-sm"></i>
+                            <div>
+                                <span class="block text-[10px] text-amber-700 font-bold">שעות פעילות</span>
+                                <span class="text-xs text-slate-700 font-medium">${item.pickupDetails.hours}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-2 space-y-2">
+                            <a href="${item.pickupDetails.confirmUrl}" target="_blank" 
+                               class="flex items-center justify-center gap-1.5 w-full text-center bg-amber-600 hover:bg-amber-700 text-white py-2 px-3 rounded-lg text-xs font-bold transition shadow-sm">
+                                <i class="fa-solid fa-square-check"></i>
+                                <span>אישור קבלת המשלוח (באזזר)</span>
+                            </a>
+                            <a href="${item.pickupDetails.supportUrl}" target="_blank" 
+                               class="flex items-center justify-center gap-1.5 w-full text-center bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 py-1.5 px-3 rounded-lg text-xs font-bold transition">
+                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                <span>שירות לקוחות ZIG-ZAG בוואטסאפ</span>
+                            </a>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (item.localTrackingNum) {
+                cardBodyHtml += `
+                    <div class="flex justify-between items-center bg-slate-100/55 p-2 rounded-lg text-xs">
+                        <span class="text-slate-500 font-medium">מספר מעקב ישראלי:</span>
+                        <span class="font-bold text-slate-800 tracking-wide select-all cursor-pointer" title="לחץ להעתקה" onclick="copyToClipboard('${item.localTrackingNum}')">
+                            ${item.localTrackingNum} <i class="fa-regular fa-copy text-[10px] ml-1 text-slate-400"></i>
+                        </span>
+                    </div>
+                `;
+            } else {
+                cardBodyHtml += `
+                    <div class="flex justify-between items-center p-2 rounded-lg text-xs text-slate-400 italic">
+                        <span>טרם התקבל מספר מעקב ישראלי</span>
+                    </div>
+                `;
+            }
+
+            if (item.status === "returned") {
+                cardBodyHtml += `
+                    <div class="space-y-3 mt-3 pt-3 border-t border-dashed border-rose-200">
+                `;
+
+                if (item.returnTrackingNum) {
+                    cardBodyHtml += `
+                        <div class="flex justify-between items-center bg-rose-50/60 p-2.5 rounded-lg text-xs text-rose-950 border border-rose-100">
+                            <span class="font-bold">מספר החזר/ברקוד:</span>
+                            <span class="font-black tracking-wider select-all cursor-pointer text-sm" onclick="copyToClipboard('${item.returnTrackingNum}')">
+                                ${item.returnTrackingNum} <i class="fa-regular fa-copy text-[11px] ml-1 opacity-70"></i>
+                            </span>
+                        </div>
+                    `;
+                }
+
+                if (item.returnDetails) {
+                    cardBodyHtml += `
+                        <div class="bg-rose-50/30 border border-rose-100/80 rounded-xl p-3.5 space-y-2.5 my-2">
+                            <div class="flex items-start gap-2">
+                                <i class="fa-solid fa-store text-rose-700 mt-0.5 text-xs"></i>
+                                <div>
+                                    <span class="block text-[10px] text-rose-800 font-bold">מסירה בנקודת חלוקה</span>
+                                    <span class="text-xs text-slate-800 font-bold leading-relaxed">${item.returnDetails.store}</span>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-2 border-t border-rose-100/50 pt-2">
+                                <i class="fa-solid fa-clock text-rose-700 mt-0.5 text-xs"></i>
+                                <div>
+                                    <span class="block text-[10px] text-rose-800 font-bold">שעות חלוקה/קבלה</span>
+                                    <span class="text-xs text-slate-700 font-medium">${item.returnDetails.hours}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                if (item.returnUrl) {
+                    cardBodyHtml += `
+                        <a href="${item.returnUrl}" target="_blank" class="flex items-center justify-center gap-1.5 w-full text-center bg-black hover:bg-slate-800 text-white py-2 px-3 rounded-lg text-xs font-bold transition shadow-sm">
+                            <i class="fa-solid fa-map-location-dot"></i>
+                            <span>בחירת נקודת חלוקה (אתר ההחזר)</span>
+                        </a>
+                    `;
+                }
+
+                if (item.uploadImageUrl) {
+                    cardBodyHtml += `
+                        <a href="${item.uploadImageUrl}" target="_blank" class="flex items-center justify-center gap-1.5 w-full text-center bg-rose-600 hover:bg-rose-700 text-white py-2 px-3 rounded-lg text-xs font-bold transition shadow-sm">
+                            <i class="fa-solid fa-camera"></i>
+                            <span>העלאת תמונת החבילה בנקודה</span>
+                        </a>
+                    `;
+                }
+
+                if (item.returnDetails && item.returnDetails.supportUrl) {
+                    cardBodyHtml += `
+                        <a href="${item.returnDetails.supportUrl}" target="_blank" class="flex items-center justify-center gap-1.5 w-full text-center bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 py-1.5 px-3 rounded-lg text-xs font-bold transition">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                            <span>שירות לקוחות בוואטסאפ (א-ה 8-16)</span>
+                        </a>
+                    `;
+                }
+
+                if (item.distributionImage) {
+                    cardBodyHtml += `
+                        <div class="mt-3">
+                            <span class="block text-[10px] text-slate-400 font-bold mb-1">תמונה מנקודת החלוקה:</span>
+                            <div class="relative group rounded-lg overflow-hidden border border-slate-200 h-28 bg-slate-100">
+                                <img src="${item.distributionImage}" alt="חבילה מוחזרת בנקודת חלוקה" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.src='https://placehold.co/600x400?text=%D7%90%D7%99%D7%9F+%D7%AA%D7%9E%D7%95%D7%A0%D7%94'"/>
+                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition duration-200">
+                                    <button onclick="openImageModal('${item.distributionImage}')" class="text-white text-xs font-bold bg-black/60 px-2.5 py-1 rounded-full flex items-center gap-1">
+                                        <i class="fa-solid fa-eye"></i> הגדל תמונה
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            cardBodyHtml += `
+                    </div>
+                </div>
+            `;
+
+            card.innerHTML = cardBodyHtml;
+            return card;
+        }
+
+        function copyToClipboard(text) {
+            const tempInput = document.createElement("input");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand("copy");
+            document.body.removeChild(tempInput);
+            
+            showToast(`הועתק ללוח: ${text}`);
+        }
+
+        function showToast(message) {
+            const toast = document.createElement("div");
+            toast.className = "fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-black text-white px-5 py-3 rounded-xl text-xs font-bold z-50 shadow-xl flex items-center gap-2";
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 2500);
+        }
+
+        function alertBox(message) {
+            const modal = document.createElement("div");
+            modal.className = "fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4";
+            modal.innerHTML = `
+                <div class="bg-white rounded-xl p-6 max-w-sm w-full text-center shadow-2xl">
+                    <i class="fa-solid fa-circle-exclamation text-amber-500 text-4xl mb-3"></i>
+                    <p class="text-sm text-slate-800 font-bold mb-4">${message}</p>
+                    <button onclick="this.closest('.fixed').remove()" class="bg-black hover:bg-slate-800 text-white font-bold py-2 px-6 rounded-lg text-xs transition">אישור</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function openImageModal(imgUrl) {
+            const modal = document.createElement("div");
+            modal.className = "fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4" ;
+            modal.onclick = function() { modal.remove(); };
+            modal.innerHTML = `
+                <div class="relative max-w-3xl w-full max-h-[85vh] flex items-center justify-center" onclick="event.stopPropagation()">
+                    <button onclick="this.closest('.fixed').remove()" class="absolute -top-10 left-0 text-white hover:text-red-400 transition text-2xl">
+                        <i class="fa-solid fa-circle-xmark"></i>
+                    </button>
+                    <img src="${imgUrl}" alt="נקודת חלוקה" class="rounded-xl max-w-full max-h-[80vh] object-contain shadow-2xl border-2 border-white/20" />
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        let currentGalleryImages = [];
+        let currentGalleryIndex = 0;
+
+        function openGalleryModal(images) {
+            if (!images || !images.length) return;
+            currentGalleryImages = images;
+            currentGalleryIndex = 0;
+
+            const modal = document.createElement("div");
+            modal.id = "galleryModal";
+            modal.className = "fixed inset-0 bg-black/90 backdrop-blur-md flex flex-col justify-between items-center z-50 p-4 transition-all duration-300";
+            modal.onclick = function(e) { if (e.target === modal) closeGalleryModal(); };
+
+            modal.innerHTML = `
+                <div class="w-full max-w-4xl flex justify-between items-center text-white py-2 px-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-images text-amber-400"></i>
+                        <span class="text-sm font-bold tracking-wide" id="galleryCounter">תמונה 1 מתוך ${images.length}</span>
+                    </div>
+                    <button onclick="closeGalleryModal()" class="text-slate-300 hover:text-white transition text-2xl p-2" title="סגור">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <div class="relative max-w-4xl w-full flex-grow flex items-center justify-center my-2">
+                    <button onclick="changeGalleryImage(-1)" class="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black text-white w-12 h-12 rounded-full flex items-center justify-center z-10 transition border border-white/20 shadow-lg" title="תמונה קודמת">
+                        <i class="fa-solid fa-chevron-right text-lg"></i>
+                    </button>
+
+                    <div class="max-h-[68vh] flex items-center justify-center p-2">
+                        <img id="galleryMainImg" src="${images[0]}" alt="תמונת מוצר" class="max-h-[65vh] max-w-full object-contain rounded-xl shadow-2xl transition-all duration-200 border border-white/10" onerror="this.onerror=null; this.src='https://placehold.co/600x600/1e293b/ffffff?text=%D7%AA%D7%9E%D7%95%D7%A0%D7%94+%D7%9C%D7%90+%D7%A0%D7%9E%D7%A6%D7%90%D7%94';" />
+                    </div>
+
+                    <button onclick="changeGalleryImage(1)" class="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black text-white w-12 h-12 rounded-full flex items-center justify-center z-10 transition border border-white/20 shadow-lg" title="תמונה הבאה">
+                        <i class="fa-solid fa-chevron-left text-lg"></i>
+                    </button>
+                </div>
+
+                <div class="w-full max-w-xl flex justify-center gap-3 overflow-x-auto py-3 px-4 bg-slate-900/80 rounded-2xl border border-white/10 backdrop-blur-sm" id="galleryThumbs">
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            updateGalleryView();
+            document.addEventListener('keydown', handleGalleryKeydown);
+        }
+
+        function handleGalleryKeydown(e) {
+            if (!document.getElementById("galleryModal")) return;
+            if (e.key === "ArrowRight") changeGalleryImage(-1);
+            else if (e.key === "ArrowLeft") changeGalleryImage(1);
+            else if (e.key === "Escape") closeGalleryModal();
+        }
+
+        function closeGalleryModal() {
+            const m = document.getElementById("galleryModal");
+            if (m) m.remove();
+            document.removeEventListener('keydown', handleGalleryKeydown);
+        }
+
+        function changeGalleryImage(dir) {
+            if (!currentGalleryImages.length) return;
+            currentGalleryIndex = (currentGalleryIndex + dir + currentGalleryImages.length) % currentGalleryImages.length;
+            updateGalleryView();
+        }
+
+        function selectGalleryImage(idx) {
+            currentGalleryIndex = idx;
+            updateGalleryView();
+        }
+
+        function updateGalleryView() {
+            const mainImg = document.getElementById("galleryMainImg");
+            const counter = document.getElementById("galleryCounter");
+            const thumbsContainer = document.getElementById("galleryThumbs");
+
+            if (mainImg) {
+                mainImg.src = currentGalleryImages[currentGalleryIndex];
+            }
+            if (counter) {
+                counter.textContent = `תמונה ${currentGalleryIndex + 1} מתוך ${currentGalleryImages.length}`;
+            }
+
+            if (thumbsContainer) {
+                thumbsContainer.innerHTML = currentGalleryImages.map((img, i) => `
+                    <button onclick="selectGalleryImage(${i})" class="w-12 h-12 rounded-xl overflow-hidden border-2 transition-all duration-200 ${i === currentGalleryIndex ? 'border-amber-400 scale-110 shadow-lg' : 'border-transparent opacity-50 hover:opacity-90'}">
+                        <img src="${img}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://placehold.co/100x100/1e293b/ffffff?text=IMG';" />
+                    </button>
+                `).join('');
+            }
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            return date.toLocaleDateString('he-IL', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+    </script>
+</body>
+</html>
