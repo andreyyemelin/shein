@@ -228,8 +228,8 @@
                 localTrackingNum: "SN7681305 דרך חברת GCX",
                 status: "returned", 
                 returnTrackingNum: "26665793220033631689",
-                returnUrl: "http://hfd.sh/WZ8wyZ",
-                uploadImageUrl: "https://partners.hfd.co.il/approve/26665793220033631689",
+                returnUrl: "",
+                uploadImageUrl: "",
                 distributionImage: "",
                 returnDetails: {
                     store: "מכולת אקספרס",
@@ -246,8 +246,8 @@
                 localTrackingNum: "SN7684925 דרך GCX",
                 status: "returned",
                 returnTrackingNum: "92509894", 
-                returnUrl: "http://hfd.sh/r9LBY7", 
-                uploadImageUrl: "https://partners.hfd.co.il/approve/67175992509894590587", 
+                returnUrl: "", 
+                uploadImageUrl: "", 
                 distributionImage: "",
                 returnDetails: {
                     store: "מכולת אקספרס",
@@ -274,7 +274,7 @@
                 summary: "מכנס ארוך (L ו-XL) ומכנס קצר (שתי מידות L ו-XL)", 
                 amount: 137.68,
                 localTrackingNum: "SN7943366 דרך חברת GCX", 
-                status: "received", // Updated: Arrived in Israel!
+                status: "received", // Arrived in Israel!
                 returnTrackingNum: "",
                 returnUrl: "",
                 distributionImage: ""
@@ -286,7 +286,7 @@
                 summary: "2 סוודרים (L ו-XL), גופייה, 2 סוודרים צבע משמש (L ו-XL), ג'ינס לבן (L ו-XL)", 
                 amount: 335.89,
                 localTrackingNum: "SN7959416", 
-                status: "shipped", 
+                status: "received", 
                 returnTrackingNum: "",
                 returnUrl: "",
                 distributionImage: "",
@@ -303,8 +303,8 @@
                 estimatedDelivery: "10 באוגוסט - 16 באוגוסט, 2026",
                 summary: "מכנס קצר (L ו-XL) וסיכה מעוצבת קטנה", 
                 amount: 56.07,
-                localTrackingNum: "", 
-                status: "ordered",
+                localTrackingNum: "SN7984730 דרך חברת GCX", 
+                status: "received",
                 returnTrackingNum: "",
                 returnUrl: "",
                 distributionImage: "",
@@ -319,8 +319,8 @@
                 estimatedDelivery: "10 באוגוסט - 16 באוגוסט, 2026",
                 summary: "", 
                 amount: 44.24,
-                localTrackingNum: "", 
-                status: "ordered",
+                localTrackingNum: "SN8007906", 
+                status: "shipped",
                 returnTrackingNum: "",
                 returnUrl: "",
                 distributionImage: "",
@@ -690,6 +690,15 @@
                                     <span class="text-xs text-slate-700 font-medium">${item.returnDetails.hours}</span>
                                 </div>
                             </div>
+                        </div>
+                    `;
+                }
+
+                if (!item.returnUrl && !item.uploadImageUrl) {
+                    cardBodyHtml += `
+                        <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 p-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 my-2 shadow-sm">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-sm"></i>
+                            <span>החבילה נמסרה בהצלחה לחנות</span>
                         </div>
                     `;
                 }
